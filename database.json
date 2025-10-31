@@ -1,0 +1,11 @@
+{
+    "dev": {
+        "driver": "postgres",
+        "host": "localhost",
+        "filename": "./db/migrations/",
+        "user": {"ENV": "DB_USER"},
+        "password": {"ENV": "DB_PASSWORD"},
+        "database": {"ENV": "DB_NAME"}
+    }
+}
+
