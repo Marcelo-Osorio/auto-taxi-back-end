@@ -6,10 +6,10 @@
     "dev": "nodemon api/index.js",
     "start": "node api/index.js",
     "lint": "eslint",
-    "migrations:generate": "db-migrate create --name",
-    "migrations:run": "db-migrate up",
-    "migrations:revert": "db-migrate down",
-    "migrations:delete": "db-migrate reset"
+    "migrations:generate": "db-migrate create --name --migrations-dir db/migrations",
+    "migrations:run": "db-migrate up --migrations-dir db/migrations",
+    "migrations:revert": "db-migrate down --migrations-dir db/migrations",
+    "migrations:delete": "db-migrate reset --migrations-dir db/migrations"
   },
   "keywords": [],
   "author": "",
