@@ -9,12 +9,12 @@ const routeSchema = {
     unique: true,
   },
   // start_point: {
-  //   type: 'string',
+  //   type: 'point',
   //   length: 200,
   //   notNull: true,
   // },
   // end_point: {
-  //   type: 'string',
+  //   type: 'point',
   //   length: 200,
   //   notNull: true,
   // },
