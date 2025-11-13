@@ -31,6 +31,11 @@ const userSchema = {
     type: 'date',
     notNull: true,
   },
+  email : {
+    type: 'string',
+    notNull: true,
+    unique: true
+  },
   plan_id: {
     type: 'int',
     notNull: true,
