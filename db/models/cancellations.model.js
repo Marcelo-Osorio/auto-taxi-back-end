@@ -8,7 +8,8 @@ const cancellationsSchema = {
     notNull: true,
     unique: true,
   },
-  cancellation_available_time: { type: 'time' },
+  breakpoint_time: { type: 'time',notNull: true  },
+  status_time: { type: 'string', length: 50, notNull: true },
   cancellation_type: {
     type: 'string',
     length: 100,
