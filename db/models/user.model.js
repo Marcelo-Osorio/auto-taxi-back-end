@@ -12,11 +12,9 @@ const userSchema = {
     type: 'string',
     notNull: true,
     length: 100,
-    unique: true
   },
   password: {
     type: 'text',
-    notNull: true,
   },
   account_type : {
     type: 'string',
@@ -29,7 +27,6 @@ const userSchema = {
   },
   birth_date: {
     type: 'date',
-    notNull: true,
   },
   email : {
     type: 'string',

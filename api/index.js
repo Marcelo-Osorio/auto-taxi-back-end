@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const passport = require('passport');
 const { config } = require('./../config/config')
 const routerBuilder = require('./routes');
-const { boomErrorHandler,errorHandler } = require('./middleawares/error.handler');
+const { boomErrorHandler,errorHandler } = require('./middlewares/error.handler');
 
 const app = express();
 const {port} = config;
@@ -19,6 +20,7 @@ const options = {
   }
 }
 app.use(cors(options));
+app.use(passport.initialize());
 
 app.listen(port, () => {
   console.log('AutoTaxi port ' + port);

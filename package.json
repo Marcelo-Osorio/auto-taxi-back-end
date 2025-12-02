@@ -2,6 +2,7 @@
   "name": "auto-taxi",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "dev": "nodemon api/index.js",
     "start": "node api/index.js",
@@ -35,7 +36,9 @@
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
+    "nodemailer": "^7.0.11",
     "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "pg": "^8.16.3",
     "socket.io": "^4.8.1",
     "stripe": "^19.1.0"
