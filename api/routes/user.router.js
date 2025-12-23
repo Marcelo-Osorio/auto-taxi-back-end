@@ -7,15 +7,15 @@ const {
 } = require('../schemas/user.schema');
 const UserService = require('../services/user.service');
 const passport = require('passport');
-require('../middlewares/google');
 const boom = require('@hapi/boom');
 const verifyToken = require('../middlewares/authMiddleware');
 const router = app.Router();
 const session = require('express-session');
 const { config } = require('./../../config/config');
-const uploadIMGMiddleware = require("./../middlewares/uploadIMGMiddleware");
+const uploadIMGMiddleware = require('./../middlewares/uploadIMGMiddleware');
 const upload = uploadIMGMiddleware('users-app');
-const parserFormData = require('../middlewares/formidableMiddleware');
+require('../middlewares/google');
+require('../middlewares/facebook');
 
 const service = new UserService();
 const sessionOptions = {
@@ -39,15 +39,14 @@ router.get(
 );
 
 router.post(
-  '/app',
+  '/app/register',
   verifyToken,
-  validationHandler(createUserSchema, 'body'),
   upload.single('profileImage'),
+  validationHandler(createUserSchema, 'body'),
   async (req, res, next) => {
     try {
       const body = req.body;
-      console.log('Body',body, 'File',req.file.filename);
-      const user = await service.createInAPP(body,req.file);
+      const user = await service.createInAPP(body, req.file);
       res.status(201).json({
         ...user,
         message: 'user created',
@@ -93,5 +92,18 @@ router.get(
     res.send(req.user);
   },
 );
+
+router.get('/facebook', passport.authenticate('auth-facebook'));
+
+router.get(
+  '/facebook/callback',
+  session(sessionOptions),
+  passport.authenticate('auth-facebook', { failureRedirect: '/login' }),
+  function (req, res) {
+    res.redirect('/');
+  },
+);
+
+
 
 module.exports = router;

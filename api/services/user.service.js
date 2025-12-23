@@ -57,7 +57,7 @@ class UserService {
     if (!img) {
       userImagesProfile.push({
         url: config.IMAGE_URL_USER_DEFAULT,
-        statusImg: `can't upload image, using default image`,
+        statusImg: `using default image`,
         defaultImg: true,
       });
     } else {
@@ -83,8 +83,7 @@ class UserService {
     }
     const { plan_id, type_plan } = rowsPlans[0];
     const hashedPassword = await this.hasPassword(password);
-    const userImageProfile = this.getProfileImgObject(img);
-    const profileImage = userImageProfile[0];
+    const profileImage = this.getProfileImgObject(img);
     const values = [username, hashedPassword, birthdate, email, plan_id, profileImage.url];
     const rows_user_id = await this.createUser(values, "'application'");
     if (rows_user_id.length === 0) {
@@ -161,7 +160,7 @@ class UserService {
     }
     const profileImage = [{
       url: photo,
-      statusImg: '',
+      statusImg: `image by ${provider}`,
       defaultImg: false,
     }];
     return cb(null, {

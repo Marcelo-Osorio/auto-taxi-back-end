@@ -1,5 +1,4 @@
 const express = require('express');
-const bodyParser = require('body-parser')
 const cors = require('cors');
 const passport = require('passport');
 const { config } = require('./../config/config')
@@ -10,8 +9,8 @@ const app = express();
 const {port} = config;
 const whitelist = ['http://127.0.0.1:5500','https://taxi.co'];
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:false}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const options = {
   origin: function (origin, callback) {
     if (whitelist.includes(origin) || !origin) {

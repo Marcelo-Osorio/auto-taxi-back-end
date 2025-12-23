@@ -4,6 +4,10 @@ const { config } = require('./../../config/config');
 const UserService = require('../services/user.service');
 const service = new UserService();
 
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
 passport.use(
   'auth-google',
   new GoogleStrategy(
@@ -15,9 +19,6 @@ passport.use(
     function (accessToken, refreshToken, profile, cb) {
       service.findOrCreate(profile, function (err, user) {
         return cb(err, user);
-      });
-      passport.serializeUser(function (user, done) {
-        done(null, user);
       });
     },
   ),

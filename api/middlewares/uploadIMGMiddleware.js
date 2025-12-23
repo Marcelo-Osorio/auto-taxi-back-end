@@ -7,7 +7,6 @@ function uploadIMGMiddleware(folderName) {
   const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: (req, file) => {
-      console.log('File to upload',file);
       const folderPath = `${folderName.trim()}`; // Update the folder path here
       const fileExtension = path.extname(file.originalname).substring(1);
       const publicId = `${file.fieldname}-${Date.now()}`;
