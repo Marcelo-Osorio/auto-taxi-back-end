@@ -10,9 +10,16 @@ const config = {
   dbPort : process.env.DB_PORT,
   GOOGLE_CLIENT_ID : process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET : process.env.GOOGLE_CLIENT_SECRET,
+  FACEBOOK_APP_ID : process.env.FACEBOOK_APP_ID,
+  FACEBOOK_APP_SECRET : process.env.FACEBOOK_APP_SECRET,
   USER_EMAIL_MAILER : process.env.USER_EMAIL_MAILER,
   USER_PASS_MAILER : process.env.USER_PASS_MAILER,
   SECRET_JWT_KEY : process.env.SECRET_JWT_KEY,
+  SESSION_SECRET : process.env.SESSION_SECRET,
+  CLOUD_NAME : process.env.CLOUD_NAME,
+  CLOUDINARY_API_KEY : process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET : process.env.CLOUDINARY_API_SECRET,
+  IMAGE_URL_USER_DEFAULT : process.env.IMAGE_URL_USER_DEFAULT,
 }
 
 module.exports = {config};

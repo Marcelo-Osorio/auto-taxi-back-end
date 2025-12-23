@@ -1,5 +1,5 @@
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
 const { config } = require('./../../config/config');
 const UserService = require('../services/user.service');
 const service = new UserService();
@@ -9,12 +9,13 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.use(
-  'auth-google',
-  new GoogleStrategy(
+  'auth-facebook',
+  new FacebookStrategy(
     {
-      clientID: config.GOOGLE_CLIENT_ID,
-      clientSecret: config.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/api/v1/auth/users/google',
+      clientID: config.FACEBOOK_APP_ID,
+      clientSecret: config.FACEBOOK_APP_SECRET,
+      callbackURL: 'http://localhost:3000/api/v1/auth/users/facebook/callback',
+      scope : 'email'
     },
     function (accessToken, refreshToken, profile, cb) {
       service.findOrCreate(profile, function (err, user) {

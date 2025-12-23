@@ -10,6 +10,7 @@ const {port} = config;
 const whitelist = ['http://127.0.0.1:5500','https://taxi.co'];
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const options = {
   origin: function (origin, callback) {
     if (whitelist.includes(origin) || !origin) {
