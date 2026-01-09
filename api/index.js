@@ -4,6 +4,7 @@ const passport = require('passport');
 const { config } = require('./../config/config')
 const routerBuilder = require('./routes');
 const { boomErrorHandler,errorHandler } = require('./middlewares/error.handler');
+const cookieParser = require("cookie-parser");
 
 const app = express();
 const {port} = config;
@@ -11,6 +12,7 @@ const whitelist = ['http://127.0.0.1:5500','https://taxi.co'];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 const options = {
   origin: function (origin, callback) {
     if (whitelist.includes(origin) || !origin) {
@@ -26,7 +28,6 @@ app.use(passport.initialize());
 app.listen(port, () => {
   console.log('AutoTaxi port ' + port);
 });
-
 routerBuilder(app);
 
 app.use(boomErrorHandler);

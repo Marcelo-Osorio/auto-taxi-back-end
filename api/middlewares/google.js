@@ -14,7 +14,7 @@ passport.use(
     {
       clientID: config.GOOGLE_CLIENT_ID,
       clientSecret: config.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/api/v1/auth/users/google',
+      callbackURL: 'http://localhost:3000/api/v1/auth/users/integrate/google',
     },
     function (accessToken, refreshToken, profile, cb) {
       service.findOrCreate(profile, function (err, user) {

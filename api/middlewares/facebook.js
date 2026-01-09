@@ -14,7 +14,7 @@ passport.use(
     {
       clientID: config.FACEBOOK_APP_ID,
       clientSecret: config.FACEBOOK_APP_SECRET,
-      callbackURL: 'http://localhost:3000/api/v1/auth/users/facebook/callback',
+      callbackURL: 'http://localhost:3000/api/v1/auth/users/integrate/facebook/callback',
       scope : 'email'
     },
     function (accessToken, refreshToken, profile, cb) {

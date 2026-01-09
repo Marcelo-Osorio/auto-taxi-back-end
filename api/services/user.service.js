@@ -29,14 +29,6 @@ class UserService {
     return res.rows.length > 0;
   }
 
-  async verifyEmailExistence(email) {
-    const exist = await this.existsEmail(email);
-    if (exist) {
-      throw boom.notFound('Email is already created');
-    }
-    return exist;
-  }
-
   async existsUsername(username) {
     const query = 'SELECT * FROM user WHERE username=$1';
     const values = [username];
@@ -71,12 +63,8 @@ class UserService {
     return userImagesProfile;
   }
 
-  async createInAPP(user, img) {
+  async registerInAPP(user, img) {
     const { username, password, birthdate, email } = user;
-    const emailExists = await this.existsEmail(email);
-    if (emailExists) {
-      throw boom.conflict('Email already exists');
-    }
     const rowsPlans = await this.findPlan('basic');
     if (rowsPlans.length === 0) {
       throw boom.notFound('Error assigning plan free to user');
@@ -84,7 +72,7 @@ class UserService {
     const { plan_id, type_plan } = rowsPlans[0];
     const hashedPassword = await this.hasPassword(password);
     const profileImage = this.getProfileImgObject(img);
-    const values = [username, hashedPassword, birthdate, email, plan_id, profileImage.url];
+    const values = [username, hashedPassword, birthdate, email, plan_id, profileImage[0].url];
     const rows_user_id = await this.createUser(values, "'application'");
     if (rows_user_id.length === 0) {
       throw boom.conflict('Error creating user');
@@ -184,7 +172,7 @@ class UserService {
   }
 
   async sendLinkToEmail(email) {
-    const token = jwt.sign({ email }, config.SECRET_JWT_KEY, {
+    const token = jwt.sign({ email }, config.SECRET_JWT_REGISTER_KEY, {
       expiresIn: '10m',
     });
     const verificationLink = `http://localhost:3000/auth/register?token=${token}`;
@@ -196,6 +184,44 @@ class UserService {
                <a href="${verificationLink}">Verify Email</a>`,
     });
     return { message: 'Verification email sent', ok: true };
+  }
+
+  async verifyFieldExistence(field, value) {
+    const query = `SELECT user_id
+                   FROM "user" WHERE ${field}=$1`;
+    const values = [value];
+    const res = await db.query(query, values);
+    return res.rows.length > 0;
+  }
+
+  async createUserAccessToken(user) {
+    const access_token = jwt.sign({ id: user.user_id, username: user.username }, config.SECRET_JWT_ACCESS_KEY,{
+        expiresIn: '15s',
+      },
+    );
+
+    return access_token;
+  }
+
+  async loginInAPP(email, password) {
+    const query = `SELECT user_id, username, password, birth_date, photo FROM "user"
+                   WHERE email=$1 AND type_account = 'application'`;
+    const values = [email];
+    const res = await db.query(query, values);
+    if(res.rows.length === 0) {
+      throw boom.unauthorized('Email or password incorrect');
+    }
+    const { user_id, username, password: hashedPassword, birth_date, photo } = res.rows[0];
+    const match = await bcrypt.compare(password, hashedPassword);
+    if (!match) {
+      throw boom.unauthorized('Email or password incorrect');
+    }
+    return {
+      user_id,
+      username,
+      birth_date,
+      photo
+    }
   }
 }
 

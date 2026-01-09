@@ -1,52 +1,34 @@
 const app = require('express');
 const validationHandler = require('../middlewares/validation.handler');
 const {
-  getUserSchema,
   createUserSchema,
   getUserEmailSchema,
+  loginUserSchema,
 } = require('../schemas/user.schema');
 const UserService = require('../services/user.service');
-const passport = require('passport');
-const boom = require('@hapi/boom');
-const verifyToken = require('../middlewares/authMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
 const router = app.Router();
-const session = require('express-session');
 const { config } = require('./../../config/config');
 const uploadIMGMiddleware = require('./../middlewares/uploadIMGMiddleware');
 const upload = uploadIMGMiddleware('users-app');
-require('../middlewares/google');
-require('../middlewares/facebook');
+const userExistenceVerification = require('../middlewares/user.existence');
+const jwt = require('jsonwebtoken');
+const {keepSession} = require('../middlewares/authMiddleware');
+
+router.use(keepSession);
 
 const service = new UserService();
-const sessionOptions = {
-  secret: config.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-};
-
-router.get(
-  '/app/:id',
-  validationHandler(getUserSchema, 'params'),
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-      const data = await service.findOne(id);
-      res.json(data);
-    } catch (error) {
-      next(error);
-    }
-  },
-);
 
 router.post(
-  '/app/register',
-  verifyToken,
+  '/register',
+  verifyToken('register_token'),
   upload.single('profileImage'),
   validationHandler(createUserSchema, 'body'),
+  userExistenceVerification('email', 'notAllowed'),
   async (req, res, next) => {
     try {
       const body = req.body;
-      const user = await service.createInAPP(body, req.file);
+      const user = await service.registerInAPP(body, req.file);
       res.status(201).json({
         ...user,
         message: 'user created',
@@ -58,21 +40,29 @@ router.post(
 );
 
 router.post(
-  '/app/validate-email',
-  validationHandler(getUserEmailSchema, 'body'),
+  '/login',
+  validationHandler(loginUserSchema, 'body'),
+  userExistenceVerification('email', 'allowed'),
   async (req, res, next) => {
     try {
-      const { email } = req.body;
-      const exists = await service.verifyEmailExistence(email);
-      if (!exists) {
-        const { ok, message } = await service.sendLinkToEmail(email);
-        res.json({
-          ok,
-          message,
-        });
-      } else {
-        throw boom.conflict('Email is already created');
-      }
+      const { email, password } = req.body;
+      const user = await service.loginInAPP(email, password);
+      const access_token = await service.createUserAccessToken(user);
+      const refreshToken = jwt.sign(
+        { id: user.user_id, username: user.username },
+        config.SECRET_JWT_REFRESH_KEY,
+        {
+          expiresIn: '7d',
+        },
+      );
+      res
+        .cookie('access_token', access_token, {
+          httpOnly: true,
+        })
+        .cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+        })
+        .send({ user, access_token, refreshToken });
     } catch (error) {
       next(error);
     }
@@ -80,30 +70,62 @@ router.post(
 );
 
 router.get(
-  '/google',
-  session(sessionOptions),
-  passport.authenticate('auth-google', {
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/userinfo.profile',
-    ],
-  }),
+  '/token',
+  verifyToken('refreshToken'),
   async (req, res, next) => {
-    res.send(req.user);
+    try {
+      const { user } = req;
+      const access_token = await service.createUserAccessToken({
+        user_id: user.id,
+        username: user.username,
+      });
+      const refreshToken = jwt.sign(
+        { id: user.id, username: user.username },
+        config.SECRET_JWT_REFRESH_KEY,
+        {
+          expiresIn: '7d',
+        },
+      );
+      res
+        .cookie('access_token', access_token, {
+          httpOnly: true,
+        })
+        .cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+        })
+        .send({ access_token, refreshToken });
+    } catch (error) {
+      next(error);
+    }
   },
 );
 
-router.get('/facebook', passport.authenticate('auth-facebook'));
+router.get('/test', verifyToken('access_token'), async (req, res, next) => {
+  try {
+    console.log('This is', req.session);
+    res.send('Welcome to AutoTaxi API');
+  } catch (error) {
+    next(error);
+  }
+});
 
-router.get(
-  '/facebook/callback',
-  session(sessionOptions),
-  passport.authenticate('auth-facebook', { failureRedirect: '/login' }),
-  function (req, res) {
-    res.redirect('/');
+router.post(
+  '/validate-email',
+  validationHandler(getUserEmailSchema, 'body'),
+  userExistenceVerification('email', 'notAllowed'),
+  async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      const { ok, message } = await service.sendLinkToEmail(email);
+      res.json({
+        ok,
+        message,
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 );
-
 
 
 module.exports = router;
