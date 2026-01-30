@@ -2,23 +2,30 @@ const UserService = require('../services/user.service');
 const boom = require('@hapi/boom');
 const service = new UserService();
 
-function userExistenceVerification(field, mode) {
+function fieldExistenceVerification(field, mode, extraFilters = null) {
   return async (req, res, next) => {
     try {
       //just in case body is in an empty state
       const value = req.body[field];
-      const exists = await service.verifyFieldExistence(field, value);
+      //was expanded to accept others filters
+      /*filters = {
+       type_account : 'application'
+       } */
+      const exists = await service.verifyFieldExistence(
+        field,
+        value,
+        extraFilters
+      );
       if (!exists && mode === 'allowed') {
-        throw new Error(`${field} does not exists`);
+        throw boom.conflict(`${field} does not exists`);
       } else if (exists && mode === 'notAllowed') {
-        throw new Error(`The ${field} already exists`);
+        throw boom.conflict(`The ${field} already exists`);
       }
       next();
     } catch (error) {
-      next(boom.conflict(error.message));
+      next(error);
     }
-  }
+  };
 }
 
-
-module.exports = userExistenceVerification;
+module.exports = fieldExistenceVerification;

@@ -4,6 +4,7 @@ const {
   createUserSchema,
   getUserEmailSchema,
   loginUserSchema,
+  changePasswordSchema,
 } = require('../schemas/user.schema');
 const UserService = require('../services/user.service');
 const { verifyToken } = require('../middlewares/authMiddleware');
@@ -11,9 +12,9 @@ const router = app.Router();
 const { config } = require('./../../config/config');
 const uploadIMGMiddleware = require('./../middlewares/uploadIMGMiddleware');
 const upload = uploadIMGMiddleware('users-app');
-const userExistenceVerification = require('../middlewares/user.existence');
+const fieldExistenceVerification = require('../middlewares/user.existence');
 const jwt = require('jsonwebtoken');
-const {keepSession} = require('../middlewares/authMiddleware');
+const { keepSession } = require('../middlewares/authMiddleware');
 
 router.use(keepSession);
 
@@ -24,7 +25,7 @@ router.post(
   verifyToken('register_token'),
   upload.single('profileImage'),
   validationHandler(createUserSchema, 'body'),
-  userExistenceVerification('email', 'notAllowed'),
+  fieldExistenceVerification('email', 'notAllowed'),
   async (req, res, next) => {
     try {
       const body = req.body;
@@ -42,7 +43,7 @@ router.post(
 router.post(
   '/login',
   validationHandler(loginUserSchema, 'body'),
-  userExistenceVerification('email', 'allowed'),
+  fieldExistenceVerification('email', 'allowed'),
   async (req, res, next) => {
     try {
       const { email, password } = req.body;
@@ -69,36 +70,32 @@ router.post(
   },
 );
 
-router.get(
-  '/token',
-  verifyToken('refreshToken'),
-  async (req, res, next) => {
-    try {
-      const { user } = req;
-      const access_token = await service.createUserAccessToken({
-        user_id: user.id,
-        username: user.username,
-      });
-      const refreshToken = jwt.sign(
-        { id: user.id, username: user.username },
-        config.SECRET_JWT_REFRESH_KEY,
-        {
-          expiresIn: '7d',
-        },
-      );
-      res
-        .cookie('access_token', access_token, {
-          httpOnly: true,
-        })
-        .cookie('refreshToken', refreshToken, {
-          httpOnly: true,
-        })
-        .send({ access_token, refreshToken });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+router.get('/token', verifyToken('refreshToken'), async (req, res, next) => {
+  try {
+    const { user } = req;
+    const access_token = await service.createUserAccessToken({
+      user_id: user.id,
+      username: user.username,
+    });
+    const refreshToken = jwt.sign(
+      { id: user.id, username: user.username },
+      config.SECRET_JWT_REFRESH_KEY,
+      {
+        expiresIn: '7d',
+      },
+    );
+    res
+      .cookie('access_token', access_token, {
+        httpOnly: true,
+      })
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+      })
+      .send({ access_token, refreshToken });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get('/test', verifyToken('access_token'), async (req, res, next) => {
   try {
@@ -112,11 +109,11 @@ router.get('/test', verifyToken('access_token'), async (req, res, next) => {
 router.post(
   '/validate-email',
   validationHandler(getUserEmailSchema, 'body'),
-  userExistenceVerification('email', 'notAllowed'),
+  fieldExistenceVerification('email', 'notAllowed'),
   async (req, res, next) => {
     try {
       const { email } = req.body;
-      const { ok, message } = await service.sendLinkToEmail(email);
+      const { ok, message } = await service.sendLinkToEmail(email, 'register');
       res.json({
         ok,
         message,
@@ -127,5 +124,42 @@ router.post(
   },
 );
 
+router.post(
+  '/check-email',
+  validationHandler(getUserEmailSchema, 'body'),
+  fieldExistenceVerification('email', 'allowed', { type_account: 'application' }),
+  async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      const { ok, message } = await service.sendLinkToEmail(email, 'recover');
+      res.json({
+        ok,
+        message,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.post(
+  '/change-password',
+  verifyToken('recover_token'),
+  validationHandler(changePasswordSchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const { email } = req.user;
+      const { password } = req.body;
+      const {user_id} = await service.changePassword(email, password);
+      res.json({
+        ok: true,
+        message: 'Password changed succcessfully',
+        id : user_id
+      })
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 module.exports = router;

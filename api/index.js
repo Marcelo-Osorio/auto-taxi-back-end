@@ -28,6 +28,7 @@ app.use(passport.initialize());
 app.listen(port, () => {
   console.log('AutoTaxi port ' + port);
 });
+
 routerBuilder(app);
 
 app.use(boomErrorHandler);

@@ -8,6 +8,7 @@ passport.serializeUser(function (user, done) {
   done(null, user);
 });
 
+//there's a problem we can't get email because Facebook needs to be verified
 passport.use(
   'auth-facebook',
   new FacebookStrategy(
